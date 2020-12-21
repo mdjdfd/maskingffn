@@ -1,0 +1,9 @@
+name: sur-exp01-LotteryTicketHypothesis
+channels:
+- defaults
+dependencies:
+- torchvision
+- pip>=20
+- pip:
+    - deepstruct
+
