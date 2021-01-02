@@ -3,7 +3,6 @@ import torch.utils
 
 import deepstruct.sparse
 
-from deepstruct.learning import run_evaluation
 from deepstruct.learning import train
 from helper import get_mnist_loaders
 
