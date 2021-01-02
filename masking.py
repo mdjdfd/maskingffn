@@ -4,12 +4,12 @@ import torch.utils
 import deepstruct.sparse
 
 from deepstruct.learning import train
-from helper import get_mnist_loaders
+import helper as mnd
 
 
 def random_masking_first_layer():
     batch_size = 10
-    train_loader, test_loader = get_mnist_loaders(batch_size)
+    train_loader, test_loader = mnd.get_mnist_loaders(batch_size)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     feature, labels = iter(train_loader).next()
@@ -43,6 +43,3 @@ def random_masking_first_layer():
     result_mask = random_mask * first_layer_mask
 
     return result_mask
-
-
-print(random_masking_first_layer())
