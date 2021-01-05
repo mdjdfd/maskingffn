@@ -1,8 +1,9 @@
-name: sur-exp01-LotteryTicketHypothesis
+name: sur-exp01-masking
 channels:
 - defaults
 dependencies:
 - torchvision
+- matplotlib
 - pip>=20
 - pip:
     - deepstruct
