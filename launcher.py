@@ -3,9 +3,11 @@ import masking as rm
 
 
 def main():
-    # masked_tensor = rm.random_masking_first_layer()
-    # print(masked_tensor)
-    vis.data_image_visualization()
+    accuracy, masked_tensor, model = rm.random_masking_first_layer()
+    vis.model_visualization_tensorboard(model)
+    # vis.single_image_visualization()
+    # vis.grid_image_visualization()
+    # vis.grid_image_visualization_tensorboard()
 
 
 if __name__ == "__main__":

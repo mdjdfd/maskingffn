@@ -4,6 +4,7 @@ channels:
 dependencies:
 - torchvision
 - matplotlib
+- tensorflow
 - pip>=20
 - pip:
     - deepstruct

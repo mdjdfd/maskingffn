@@ -5,6 +5,7 @@ import deepstruct.sparse
 
 from deepstruct.learning import train
 import helper as hp
+from deepstruct.learning import run_evaluation
 
 
 def random_masking_first_layer():
@@ -19,13 +20,16 @@ def random_masking_first_layer():
 
     loss = torch.nn.CrossEntropyLoss()
 
-    epochs = 3
+    epochs = 4
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [100, 50, 10])
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
     for epoch in range(epochs):
         train(train_loader, model, optimizer, loss, device)
+
+    assert run_evaluation(test_loader, model, device) > 1 / output_size
+    test_accuracy = run_evaluation(test_loader, model, device)
 
     model.apply_mask()
     model.recompute_mask(theta=0.01)
@@ -42,4 +46,4 @@ def random_masking_first_layer():
 
     result_mask = random_mask * first_layer_mask
 
-    return result_mask
+    return test_accuracy, result_mask, model
