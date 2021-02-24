@@ -2,6 +2,9 @@ name: sur-exp01-masking
 channels:
 - defaults
 dependencies:
+- numpy
+- scipy
+- collections
 - torchvision
 - matplotlib
 - tensorflow
