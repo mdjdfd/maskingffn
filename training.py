@@ -1,6 +1,5 @@
 import torch
 import torch.utils
-
 import deepstruct.sparse
 
 from deepstruct.learning import train
@@ -8,7 +7,7 @@ import helper as hp
 from deepstruct.learning import run_evaluation
 
 
-def random_masking_first_layer():
+def config_and_train():
     batch_size = 10
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
 
@@ -20,13 +19,14 @@ def random_masking_first_layer():
 
     loss = torch.nn.CrossEntropyLoss()
 
-    epochs = 4
+    epochs = 3
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [100, 50, 10])
     model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
     for epoch in range(epochs):
-        train(train_loader, model, optimizer, loss, device)
+        print(train(train_loader, model, optimizer, loss, device))
+        torch.save(model.state_dict(), 'cache/model.pt')
 
     assert run_evaluation(test_loader, model, device) > 1 / output_size
     test_accuracy = run_evaluation(test_loader, model, device)
@@ -34,16 +34,16 @@ def random_masking_first_layer():
     model.apply_mask()
     model.recompute_mask(theta=0.01)
 
-    n = 100
-    d = 784
-    random_mat = torch.rand(n, d)
-    k = round(0.50 * d)
-    k_th_quantile = torch.topk(random_mat, k, largest=False)[0][:, -1:]
-    bool_tensor = random_mat <= k_th_quantile
-    random_mask = torch.where(bool_tensor, torch.tensor(1), torch.tensor(0))
+    return test_accuracy, model
 
-    first_layer_mask = model.layer_first.get_mask()
-
-    result_mask = random_mask * first_layer_mask
-
-    return test_accuracy, result_mask, model
+    # n = 100
+    # d = 784
+    # random_mat = torch.rand(n, d)
+    # k = round(0.50 * d)
+    # k_th_quantile = torch.topk(random_mat, k, largest=False)[0][:, -1:]
+    # bool_tensor = random_mat <= k_th_quantile
+    # random_mask = torch.where(bool_tensor, torch.tensor(1), torch.tensor(0))
+    #
+    # first_layer_mask = model.layer_first.get_mask()
+    #
+    # result_mask = random_mask * first_layer_mask
