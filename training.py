@@ -1,5 +1,6 @@
 import torch
 import torch.utils
+import torch.nn as nn
 import deepstruct.sparse
 
 from deepstruct.learning import train
@@ -22,6 +23,7 @@ def config_and_train():
     epochs = 3
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [100, 50, 10])
     model.to(device)
+    model.apply(weight_init)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
     for epoch in range(epochs):
@@ -47,3 +49,9 @@ def config_and_train():
     # first_layer_mask = model.layer_first.get_mask()
     #
     # result_mask = random_mask * first_layer_mask
+
+
+def weight_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.normal_(m.weight.data, 0, 0.3)
+        nn.init.normal_(m.bias.data, 0, 0.3)

@@ -1,14 +1,14 @@
 name: sur-exp01-masking
 channels:
-- defaults
+  - defaults
 dependencies:
-- numpy
-- scipy
-- collections
-- torchvision
-- matplotlib
-- tensorflow
-- pip>=20
-- pip:
-    - deepstruct
+  - numpy
+  - scipy
+  - collections
+  - torchvision
+  - matplotlib
+  - tensorflow
+  - pip>=20
+  - pip:
+      - deepstruct
 

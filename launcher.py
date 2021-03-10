@@ -1,12 +1,14 @@
 import training as tr
 import pruning as pr
 import visualization as vis
+import debug as db
 
 
 def main():
     # test_accuracy, model = tr.config_and_train()
+    # pr.network_prune()
 
-    pr.network_prune()
+    db.model_init()
 
     # Visualization calls
     # vis.model_visualization_tensorboard(model)                       #Visualization model training in tensorboard
