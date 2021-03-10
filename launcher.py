@@ -10,6 +10,7 @@ def main():
 
     db.model_init()
 
+
     # Visualization calls
     # vis.model_visualization_tensorboard(model)                       #Visualization model training in tensorboard
     # vis.single_image_visualization()                                 #Image ploting with matlib

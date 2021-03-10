@@ -22,11 +22,12 @@ def model_init():
     assert isinstance(model, deepstruct.sparse.MaskedDeepFFN)
 
     model.to(device)
+
     model.apply(weight_init)
+
 
 
 def weight_init(m):
     if isinstance(m, nn.Linear):
         assert isinstance(m, nn.Linear)
         nn.init.normal_(m.weight.data, 0, 0.3)
-        nn.init.normal_(m.bias.data, 0, 0.3)
