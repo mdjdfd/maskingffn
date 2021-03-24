@@ -17,31 +17,37 @@ def network_prune():
 
     input_shape = feature.shape[1:]
     output_size = int(labels.shape[-1])
-    model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [100, 50, 10])
+    model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100, 10])
 
     model.load_state_dict(torch.load('cache/model.pt'))
     weights = model.state_dict()
+
     layers = list(model.state_dict())
 
     ranks = {}
     pruned_weights = []
 
+    # for l in layers[:9:3]:
     for l in layers[:9:3]:
-        data = weights[l]
-        w = np.array(data)
+        if 'weight' in l or 'bias' in l:
+            data = weights[l]
 
-        ranks[l] = (rankdata(np.abs(w), method='dense') - 1).astype(int).reshape(w.shape)
+            w = np.array(data)
 
-        lower_bound_rank = np.ceil(np.max(ranks[l]) * 0.50).astype(int)  # 50% Pruning
+            ranks[l] = (rankdata(np.abs(w), method='dense') - 1).astype(int).reshape(w.shape)
 
-        ranks[l][ranks[l] <= lower_bound_rank] = 0
-        ranks[l][ranks[l] > lower_bound_rank] = 1
+            lower_bound_rank = np.ceil(np.max(ranks[l]) * 0.50).astype(int)  # 50% Pruning
 
-        w = w * ranks[l]
+            ranks[l][ranks[l] <= lower_bound_rank] = 0
+            ranks[l][ranks[l] > lower_bound_rank] = 1
 
-        data[...] = torch.from_numpy(w)
+            w = w * ranks[l]
 
-        pruned_weights.append(data)
+            data[...] = torch.from_numpy(w)
+
+            pruned_weights.append(data)
+
+    print(pruned_weights)
 
     pruned_weights.append(weights[layers[-3]])  # Output layer weights
 

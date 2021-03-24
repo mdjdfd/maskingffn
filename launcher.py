@@ -1,15 +1,16 @@
 import training as tr
 import pruning as pr
 import visualization as vis
-import debug as db
+import wticket as wt
 
 
 def main():
     # test_accuracy, model = tr.config_and_train()
     # pr.network_prune()
 
-    db.model_init()
+    # tr.config_and_train()
 
+    wt.model_init()
 
     # Visualization calls
     # vis.model_visualization_tensorboard(model)                       #Visualization model training in tensorboard

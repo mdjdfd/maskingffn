@@ -21,7 +21,7 @@ def config_and_train():
     loss = torch.nn.CrossEntropyLoss()
 
     epochs = 4
-    model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [100, 50, 10])
+    model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
     model.to(device)
     model.apply(weight_init)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -54,3 +54,4 @@ def config_and_train():
 def weight_init(m):
     if isinstance(m, nn.Linear):
         nn.init.normal_(m.weight.data, 0, 0.3)
+        nn.init.normal_(m.bias.data, 0, 0.3)
