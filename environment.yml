@@ -4,11 +4,9 @@ channels:
 dependencies:
   - numpy
   - scipy
-  - collections
-  - torchvision
+  - torchvision=0.9.1
   - matplotlib
   - tensorflow
-  - pqdm
   - pip>=20
   - pip:
       - deepstruct
