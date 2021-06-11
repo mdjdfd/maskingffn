@@ -19,7 +19,7 @@ def run_model(storage_path):
     batch_size = 10
 
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     feature, labels = iter(train_loader).next()
     assert len(feature) == len(labels)
@@ -123,7 +123,8 @@ def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, lo
 
 def drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mask, path_experiment):
     plt.plot(np.arange(1, training_epochs + 1),
-             100 * (train_loss_arr - np.min(train_loss_arr)) / np.ptp(train_loss_arr).astype(float), c="blue", label="Loss")
+             100 * (train_loss_arr - np.min(train_loss_arr)) / np.ptp(train_loss_arr).astype(float), c="blue",
+             label="Loss")
     plt.plot(np.arange(1, training_epochs + 1), test_accuracy_arr, c="red", label="Accuracy")
     plt.title(f"Loss Vs Accuracy Vs Iterations")
     plt.xlabel("Iterations")
@@ -189,6 +190,7 @@ def create_mask(original_model):
             index = index + 1
 
     return local_mask
+
 
 def weight_init(m):
     if isinstance(m, nn.Linear):
