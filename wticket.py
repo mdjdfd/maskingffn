@@ -32,6 +32,9 @@ def run_model(storage_path):
     original_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, hidden_layer)
     assert isinstance(original_model, deepstruct.sparse.MaskedDeepFFN)
 
+    # Load model into device
+    original_model.to(device)
+
     # Normal distribution of weights
     original_model.apply(weight_init)
 

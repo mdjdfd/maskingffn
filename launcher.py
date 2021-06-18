@@ -11,9 +11,9 @@ import parameter as prm
 def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-    # prm.store_param()
+    prm.store_param()
 
-    test_accuracy, model = tr.config_and_train()
+    # test_accuracy, model = tr.config_and_train()
     # pr.network_prune()
 
     # tr.config_and_train()
