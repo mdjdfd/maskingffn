@@ -19,7 +19,7 @@ def run_model(storage_path):
     batch_size = 10
 
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     feature, labels = iter(train_loader).next()
     assert len(feature) == len(labels)
