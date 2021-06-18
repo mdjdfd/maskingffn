@@ -53,6 +53,7 @@ def run_model(storage_path):
     optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
+    # Close all open figures and set to matplotlib
     plt.switch_backend('agg')
 
     # Start of Pruning Functionality
