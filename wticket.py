@@ -12,7 +12,6 @@ import pickle
 import json
 from deepstruct.learning import train
 from deepstruct.learning import run_evaluation
-import matplotlib
 import matplotlib.pyplot as plt
 
 
@@ -54,7 +53,7 @@ def run_model(storage_path):
     optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
-    matplotlib.use('agg')
+    plt.switch_backend('agg')
 
     # Start of Pruning Functionality
     # best_accuracy = 0
