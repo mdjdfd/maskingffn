@@ -53,6 +53,8 @@ def run_model(storage_path):
     optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
+    plt.use('agg')
+
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
