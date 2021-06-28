@@ -144,7 +144,7 @@ def drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mas
 
 
 def store_training_data(train_loss_arr, test_accuracy_arr, path_experiment):
-    param = {'train_loss_arr': train_loss_arr, 'test_accuracy_arr': test_accuracy_arr}
+    param = {'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
 
     with open(f"{os.getcwd()}/{path_experiment}/training_data.json", 'w') as fp:
         json.dump(param, fp, sort_keys=True, indent=4)
