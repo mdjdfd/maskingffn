@@ -59,8 +59,8 @@ def run_model(storage_path):
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
-    ITERATION = 10
-    training_epochs = 4
+    ITERATION = 15
+    training_epochs = 100
 
     # Store hyperparameter
     store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
