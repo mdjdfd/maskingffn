@@ -15,6 +15,13 @@ from deepstruct.learning import run_evaluation
 import matplotlib.pyplot as plt
 
 
+################### Algorithm Steps ####################
+# 1. Random network initialization
+# 2. Initial training of the network with specific number of epochs
+# 3. Pruning a percentage of network which gives us an updated mask
+# 4. Reset the survived network to original initialization before training again
+
+
 def run_model(storage_path):
     batch_size = 10
 
@@ -59,8 +66,10 @@ def run_model(storage_path):
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
-    ITERATION = 15
-    training_epochs = 100
+    # ITERATION = 15
+    ITERATION = 5
+    # training_epochs = 100
+    training_epochs = 4
 
     # Store hyperparameter
     store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
@@ -85,8 +94,9 @@ def initial_training(train_loader, test_loader, original_model, optimizer, loss,
     utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
     for train_epoch in progress_bar:
-        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
         accuracy = run_evaluation(test_loader, original_model, device)
+        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+
         torch.save(original_model.state_dict(), f'{storage_path}/initial_trained_model.pt')
         progress_bar.set_description(
             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
@@ -109,11 +119,11 @@ def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, lo
     os.makedirs(path_experiment)
 
     for train_epoch in progress_bar:
-        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
-        train_loss_arr[train_epoch] = train_loss
-
         accuracy = run_evaluation(test_loader, original_model, device)
         test_accuracy_arr[train_epoch] = accuracy
+
+        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+        train_loss_arr[train_epoch] = train_loss
 
         torch.save(original_model.state_dict(),
                    f'{path_experiment}/{prune_type}_train_epoch_{train_epoch}.pt')
