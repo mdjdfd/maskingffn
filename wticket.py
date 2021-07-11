@@ -107,7 +107,6 @@ def initial_training(train_loader, test_loader, original_model, optimizer, loss,
         train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
         train_loss_arr[train_epoch] = train_loss
 
-        # torch.save(original_model.state_dict(), f'{storage_path}/initial_trained_model.pt')
         torch.save(original_model.state_dict(),
                    f'{path_experiment}/{prune_type}_train_epoch_{train_epoch}.pt')
 
