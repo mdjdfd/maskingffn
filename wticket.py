@@ -77,7 +77,7 @@ def run_model(storage_path):
 
     # Initial training
     initial_training(train_loader, test_loader, original_model, optimizer, loss, device,
-                     training_epochs, storage_path)
+                     training_epochs, prune_type, storage_path)
 
     # Iterative pruning
     current_mask = initial_mask
@@ -90,16 +90,31 @@ def run_model(storage_path):
                             prune_type, training_iteration, storage_path)
 
 
-def initial_training(train_loader, test_loader, original_model, optimizer, loss, device, training_epochs, storage_path):
+def initial_training(train_loader, test_loader, original_model, optimizer, loss, device, training_epochs, prune_type, storage_path):
+    train_loss_arr = np.zeros(training_epochs, float)
+    test_accuracy_arr = np.zeros(training_epochs, float)
+
     utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
+
+    path_experiment = os.path.join(storage_path, "initial_training")
+    os.makedirs(path_experiment)
+
     for train_epoch in progress_bar:
         accuracy = run_evaluation(test_loader, original_model, device)
-        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+        test_accuracy_arr[train_epoch] = accuracy
 
-        torch.save(original_model.state_dict(), f'{storage_path}/initial_trained_model.pt')
+        train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+        train_loss_arr[train_epoch] = train_loss
+
+        # torch.save(original_model.state_dict(), f'{storage_path}/initial_trained_model.pt')
+        torch.save(original_model.state_dict(),
+                   f'{path_experiment}/{prune_type}_train_epoch_{train_epoch}.pt')
+
         progress_bar.set_description(
             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
+
+    store_training_data(train_loss_arr, test_accuracy_arr, path_experiment)
 
 
 def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, loss, device,
