@@ -21,10 +21,11 @@ def retrain_wticket():
 
     model.load_state_dict(torch.load(wticket_model_path))
 
+    objects = []
     with open(wticket_mask_path, 'rb') as f:
-        mask = pickle.load(f)
-        print(mask)
+        objects.append(pickle.load(f))
 
+    print(objects)
 
     # weights = model.state_dict()
     #
