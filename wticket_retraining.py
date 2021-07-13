@@ -1,8 +1,15 @@
 import helper as hp
 import torch
 import torch.utils
+import torch.nn as nn
 import deepstruct.sparse
 import pickle
+import utils
+import numpy as np
+from tqdm import tqdm
+from deepstruct.learning import train
+from deepstruct.learning import run_evaluation
+
 
 
 def retrain_wticket():
@@ -21,12 +28,11 @@ def retrain_wticket():
 
     model.load_state_dict(torch.load(wticket_model_path))
 
-    objects = []
+    mask = []
     with open(wticket_mask_path, 'rb') as f:
-        objects.append(pickle.load(f))
+        mask.append(pickle.load(f))
 
-    print(objects)
-
+    model.apply_mask(mask)
     # weights = model.state_dict()
     #
     # layers = list(model.state_dict())
@@ -35,3 +41,27 @@ def retrain_wticket():
     #     if 'weight' in l:
     #         print(weights[l])
 
+    learning_rate = 0.01
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    loss = nn.CrossEntropyLoss()
+
+    training_epochs = 50
+    do_retraining(train_loader, test_loader, model, optimizer, loss, device, training_epochs)
+
+
+def do_retraining(train_loader, test_loader, wticket_model, optimizer, loss, device, training_epochs):
+    train_loss_arr = np.zeros(training_epochs, float)
+    test_accuracy_arr = np.zeros(training_epochs, float)
+
+    utils.print_nonzeros(wticket_model)
+    progress_bar = tqdm(range(training_epochs))
+
+    for train_epoch in progress_bar:
+        accuracy = run_evaluation(test_loader, wticket_model, device)
+        test_accuracy_arr[train_epoch] = accuracy
+
+        train_loss, train_accuracy = train(train_loader, wticket_model, optimizer, loss, device)
+        train_loss_arr[train_epoch] = train_loss
+
+        progress_bar.set_description(
+            f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
