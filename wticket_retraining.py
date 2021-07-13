@@ -19,10 +19,17 @@ def retrain_wticket():
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
 
     model.load_state_dict(torch.load(wticket_model_path))
-    weights = model.state_dict()
 
-    layers = list(model.state_dict())
+    mask = model.load_state_dict(torch.load(wticket_mask_path))
 
-    for l in layers[:9:3]:
-        if 'weight' in l:
-            print(weights[l])
+    print(mask)
+
+
+    # weights = model.state_dict()
+    #
+    # layers = list(model.state_dict())
+    #
+    # for l in layers[:9:3]:
+    #     if 'weight' in l:
+    #         print(weights[l])
+
