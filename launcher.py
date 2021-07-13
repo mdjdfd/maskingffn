@@ -4,14 +4,15 @@ import visualization as vis
 import torch
 import os
 import helper as hp
-import clustering as cl
+import wticket_retraining as ret
 import parameter as prm
 
 
 def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-    prm.store_param()
+    # prm.store_param()
+    ret.retrain_wticket()
 
     # test_accuracy, model = tr.config_and_train()
     # pr.network_prune()
