@@ -2,6 +2,7 @@ import helper as hp
 import torch
 import torch.utils
 import deepstruct.sparse
+import pickle
 
 
 def retrain_wticket():
@@ -20,9 +21,9 @@ def retrain_wticket():
 
     model.load_state_dict(torch.load(wticket_model_path))
 
-    mask = model.load_state_dict(torch.load(wticket_mask_path))
-
-    print(mask)
+    with open(wticket_mask_path, 'rb') as f:
+        mask = pickle.load(f)
+        print(mask)
 
 
     # weights = model.state_dict()
