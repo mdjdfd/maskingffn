@@ -4,59 +4,93 @@ import torch.utils
 import torch.nn as nn
 import deepstruct.sparse
 import pickle
-import utils
+import numpy as np
 
 from tqdm import tqdm
 from deepstruct.learning import train
 from deepstruct.learning import run_evaluation
 
 
-class Retrain:
-    def __init__(self, ):
-        super(Retrain, self).__init__()
+def retrain_wticket():
+    wticket_model_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-25-142526-054c576c-416f-480e-b6ec-c8cd1618a7aa/2/lt_train_epoch_0.pt"
+    wticket_mask_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-25-142526-054c576c-416f-480e-b6ec-c8cd1618a7aa/2/lt_mask_87.9.pkl"
 
-    def retrain_wticket(self):
-        wticket_model_path = "storage/2021-07-11-111745-fe392342-d71c-4ee8-a1fe-712f13e9a884/0/lt_train_epoch_37.pt"
-        # wticket_mask_path = "storage/2021-07-11-111745-fe392342-d71c-4ee8-a1fe-712f13e9a884/0/lt_mask_90.0.pkl"
+    batch_size = 10
+    train_loader, test_loader = hp.get_mnist_loaders(batch_size)
 
-        batch_size = 10
-        train_loader, test_loader = hp.get_mnist_loaders(batch_size)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    feature, labels = iter(train_loader).next()
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        feature, labels = iter(train_loader).next()
+    input_shape = feature.shape[1:]
+    output_size = int(labels.shape[-1])
 
-        input_shape = feature.shape[1:]
-        output_size = int(labels.shape[-1])
-        model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
+    loaded_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
+    loaded_model.load_state_dict(torch.load(wticket_model_path))
+    loaded_model.eval()
 
-        model.load_state_dict(torch.load(wticket_model_path))
+    with open(wticket_mask_path, 'rb') as f:
+        mask = pickle.load(f)
 
-        # mask = []
-        # with open(wticket_mask_path, 'rb') as f:
-        #     mask.append(pickle.load(f))
+    weights = loaded_model.state_dict()
 
-        model.apply_mask()
-        # weights = model.state_dict()
-        #
-        # layers = list(model.state_dict())
-        #
-        # for l in layers[:9:3]:
-        #     if 'weight' in l:
-        #         print(weights[l])
+    prune_percentile = 10
+    ITERATION = 2
+    training_epochs = 4
 
-        learning_rate = 0.01
-        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-        loss = nn.CrossEntropyLoss()
+    learning_rate = 0.01
+    optimizer = torch.optim.SGD(loaded_model.parameters(), lr=learning_rate)
+    loss = nn.CrossEntropyLoss()
 
-        training_epochs = 50
+    current_mask = mask
+    for training_iteration in range(0, ITERATION):
+        current_mask = prune_by_percentile(loaded_model, current_mask, prune_percentile)
+        retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
+                        weights,
+                        mask,
+                        training_epochs)
 
-        utils.print_nonzeros(model)
-        progress_bar = tqdm(range(training_epochs))
 
-        for train_epoch in progress_bar:
-            accuracy = run_evaluation(test_loader, model, device)
+def retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
+                    weights,
+                    current_mask,
+                    training_epochs):
+    original_initialization(loaded_model, current_mask, weights)
 
-            train_loss, train_accuracy = train(train_loader, model, optimizer, loss, device)
+    progress_bar = tqdm(range(training_epochs))
 
-            progress_bar.set_description(
-                f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
+    for train_epoch in progress_bar:
+        accuracy = run_evaluation(test_loader, loaded_model, device)
+
+        train_loss, train_accuracy = train(train_loader, loaded_model, optimizer, loss, device)
+
+        progress_bar.set_description(
+            f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
+
+
+def original_initialization(model, mask, weights):
+    index = 0
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            weight_dev = param.device
+            param.data = torch.from_numpy(mask[index] * weights[name].cpu().numpy()).to(weight_dev)
+            index = index + 1
+        if 'bias' in name:
+            param.data = weights[name]
+
+
+def prune_by_percentile(original_model, current_mask, percent, resample=False, reinit=False, **kwargs):
+    index = 0
+    for name, param in original_model.named_parameters():
+        if 'weight' in name:
+            tensor = param.data.cpu().numpy()
+            alive = tensor[np.nonzero(tensor)]
+            percentile_value = np.percentile(abs(alive), percent)
+
+            weight_dev = param.device
+            new_mask = np.where(abs(tensor) < percentile_value, 0, current_mask[index])
+
+            param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
+            current_mask[index] = new_mask
+            index = index + 1
+
+    return current_mask

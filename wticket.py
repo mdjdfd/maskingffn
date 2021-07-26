@@ -46,7 +46,8 @@ def run_model(storage_path):
     original_model.apply(weight_init)
 
     # Storing initial network
-    initial_state_dict = copy.deepcopy(original_model.state_dict())
+    # initial_state_dict = copy.deepcopy(original_model.state_dict())
+    initial_state_dict = original_model.state_dict()
     torch.save(initial_state_dict, f'{storage_path}/initial_model.pt')
 
     prune_type = "lt"
@@ -66,10 +67,10 @@ def run_model(storage_path):
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
-    ITERATION = 10
-    # ITERATION = 5
-    training_epochs = 50
-    # training_epochs = 4
+    # ITERATION = 10
+    ITERATION = 5
+    # training_epochs = 50
+    training_epochs = 4
 
     # Store hyperparameter
     store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
@@ -90,7 +91,8 @@ def run_model(storage_path):
                             prune_type, training_iteration, storage_path)
 
 
-def initial_training(train_loader, test_loader, original_model, optimizer, loss, device, training_epochs, prune_type, storage_path):
+def initial_training(train_loader, test_loader, original_model, optimizer, loss, device, training_epochs, prune_type,
+                     storage_path):
     train_loss_arr = np.zeros(training_epochs, float)
     test_accuracy_arr = np.zeros(training_epochs, float)
 
@@ -150,7 +152,18 @@ def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, lo
     drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mask, path_experiment)
 
     with open(f"{os.getcwd()}/{path_experiment}/{prune_type}_mask_{pruned_mask}.pkl", 'wb') as fp:
-        pickle.dump(pruned_mask, fp)
+        pickle.dump(current_mask, fp)
+
+
+
+##############Debug Purpose Only#############
+def print_model(original_model):
+    weights = original_model.state_dict()
+    layers = list(original_model.state_dict())
+    for l in layers[:9:3]:
+        if 'weight' in l or 'bias' in l:
+            data = weights[l]
+            print(data)
 
 
 def drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mask, path_experiment):

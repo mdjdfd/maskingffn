@@ -24,6 +24,9 @@ def config_and_train():
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
     model.to(device)
     model.apply(weight_init)
+
+    torch.save(model.state_dict(), 'cache/initial_model.pt')
+
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
     for epoch in range(epochs):
