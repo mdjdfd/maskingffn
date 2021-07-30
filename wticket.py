@@ -46,9 +46,9 @@ def run_model(storage_path):
     original_model.apply(weight_init)
 
     # Storing initial network
-    # initial_state_dict = copy.deepcopy(original_model.state_dict())
-    initial_state_dict = original_model.state_dict()
-    torch.save(initial_state_dict, f'{storage_path}/initial_model.pt')
+    initial_state_dict = copy.deepcopy(original_model.state_dict())
+    model = original_model.state_dict()
+    torch.save(model, f'{storage_path}/initial_model.pt')
 
     prune_type = "lt"
     # prune_type = "reinit"
@@ -77,22 +77,21 @@ def run_model(storage_path):
                          training_epochs, storage_path)
 
     # Initial training
-    initial_training(train_loader, test_loader, original_model, optimizer, loss, device,
+    initial_training(original_model, train_loader, test_loader, optimizer, loss, device,
                      training_epochs, prune_type, storage_path)
 
     # Iterative pruning
     current_mask = initial_mask
     for training_iteration in range(0, ITERATION):
         current_mask = prune_by_percentile(original_model, current_mask, prune_percentile)
-        winning_ticket_loop(train_loader, test_loader, original_model, optimizer, loss, device,
+        winning_ticket_loop(original_model, train_loader, test_loader, optimizer, loss, device,
                             initial_state_dict,
-                            current_mask,
                             training_epochs,
-                            prune_type, training_iteration, storage_path)
+                            prune_type, training_iteration, current_mask, storage_path)
 
 
-def initial_training(train_loader, test_loader, original_model, optimizer, loss, device, training_epochs, prune_type,
-                     storage_path):
+def initial_training(original_model, train_loader, test_loader, optimizer, loss, device,
+                     training_epochs, prune_type, storage_path):
     train_loss_arr = np.zeros(training_epochs, float)
     test_accuracy_arr = np.zeros(training_epochs, float)
 
@@ -118,15 +117,15 @@ def initial_training(train_loader, test_loader, original_model, optimizer, loss,
     store_training_data(train_loss_arr, test_accuracy_arr, path_experiment)
 
 
-def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, loss, device,
+def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, loss, device,
                         initial_weights,
-                        current_mask,
                         training_epochs,
-                        prune_type, training_iteration, storage_path):
+                        prune_type, training_iteration, mask, storage_path):
     train_loss_arr = np.zeros(training_epochs, float)
     test_accuracy_arr = np.zeros(training_epochs, float)
 
-    original_initialization(original_model, current_mask, initial_weights)
+    original_initialization(original_model, mask, initial_weights)
+
 
     pruned_mask = utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
@@ -152,8 +151,7 @@ def winning_ticket_loop(train_loader, test_loader, original_model, optimizer, lo
     drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mask, path_experiment)
 
     with open(f"{os.getcwd()}/{path_experiment}/{prune_type}_mask_{pruned_mask}.pkl", 'wb') as fp:
-        pickle.dump(current_mask, fp)
-
+        pickle.dump(mask, fp)
 
 
 ##############Debug Purpose Only#############
@@ -197,8 +195,9 @@ def store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, pr
         json.dump(param, fp, sort_keys=True, indent=4)
 
 
-def prune_by_percentile(original_model, current_mask, percent, resample=False, reinit=False, **kwargs):
-    index = 0
+def prune_by_percentile(original_model, mask, percent, resample=False, reinit=False, **kwargs):
+
+    step = 0
     for name, param in original_model.named_parameters():
         if 'weight' in name:
             tensor = param.data.cpu().numpy()
@@ -206,24 +205,24 @@ def prune_by_percentile(original_model, current_mask, percent, resample=False, r
             percentile_value = np.percentile(abs(alive), percent)
 
             weight_dev = param.device
-            new_mask = np.where(abs(tensor) < percentile_value, 0, current_mask[index])
+            new_mask = np.where(abs(tensor) < percentile_value, 0, mask[step])
 
             param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
-            current_mask[index] = new_mask
-            index = index + 1
-
-    return current_mask
+            mask[step] = new_mask
+            step += 1
+    return mask
 
 
 def original_initialization(original_model, mask_temp, initial_state_dict):
-    index = 0
+    step = 0
     for name, param in original_model.named_parameters():
-        if 'weight' in name:
+        if "weight" in name:
             weight_dev = param.device
-            param.data = torch.from_numpy(mask_temp[index] * initial_state_dict[name].cpu().numpy()).to(weight_dev)
-            index = index + 1
-        if 'bias' in name:
+            param.data = torch.from_numpy(mask_temp[step] * initial_state_dict[name].cpu().numpy()).to(weight_dev)
+            step = step + 1
+        if "bias" in name:
             param.data = initial_state_dict[name]
+    step = 0
 
 
 def create_mask(original_model):
@@ -232,16 +231,16 @@ def create_mask(original_model):
         if 'weight' in name:
             index = index + 1
 
-    local_mask = [None] * index
+    mask = [None] * index
 
     index = 0
     for name, param in original_model.named_parameters():
         if 'weight' in name:
             tensor = param.data.cpu().numpy()
-            local_mask[index] = np.ones_like(tensor)
+            mask[index] = np.ones_like(tensor)
             index = index + 1
 
-    return local_mask
+    return mask
 
 
 def weight_init(m):

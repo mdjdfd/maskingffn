@@ -12,8 +12,8 @@ from deepstruct.learning import run_evaluation
 
 
 def retrain_wticket():
-    wticket_model_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-25-142526-054c576c-416f-480e-b6ec-c8cd1618a7aa/2/lt_train_epoch_0.pt"
-    wticket_mask_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-25-142526-054c576c-416f-480e-b6ec-c8cd1618a7aa/2/lt_mask_87.9.pkl"
+    wticket_model_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-30-163402-99825202-4a2b-434f-b844-e8ab5dac7aea/initial_model.pt"
+    wticket_mask_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/sur-exp01-expose/storage/2021-07-30-163402-99825202-4a2b-434f-b844-e8ab5dac7aea/4/lt_mask_83.9.pkl"
 
     batch_size = 10
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
@@ -41,56 +41,66 @@ def retrain_wticket():
     optimizer = torch.optim.SGD(loaded_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
-    current_mask = mask
-    for training_iteration in range(0, ITERATION):
-        current_mask = prune_by_percentile(loaded_model, current_mask, prune_percentile)
-        retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
-                        weights,
-                        mask,
-                        training_epochs)
+    print_model(loaded_model)
+
+    # current_mask = mask
+    # for training_iteration in range(0, ITERATION):
+    #     current_mask = prune_by_percentile(loaded_model, current_mask, prune_percentile)
+    #     retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
+    #                     weights,
+    #                     mask,
+    #                     training_epochs)
 
 
-def retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
-                    weights,
-                    current_mask,
-                    training_epochs):
-    original_initialization(loaded_model, current_mask, weights)
+# def retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
+#                     weights,
+#                     current_mask,
+#                     training_epochs):
+#     original_initialization(loaded_model, current_mask, weights)
+#
+#     progress_bar = tqdm(range(training_epochs))
+#
+#     for train_epoch in progress_bar:
+#         accuracy = run_evaluation(test_loader, loaded_model, device)
+#
+#         train_loss, train_accuracy = train(train_loader, loaded_model, optimizer, loss, device)
+#
+#         progress_bar.set_description(
+#             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
+#
+#
+# def original_initialization(model, mask, weights):
+#     index = 0
+#     for name, param in model.named_parameters():
+#         if 'weight' in name:
+#             weight_dev = param.device
+#             param.data = torch.from_numpy(mask[index] * weights[name].cpu().numpy()).to(weight_dev)
+#             index = index + 1
+#         if 'bias' in name:
+#             param.data = weights[name]
+#
+#
+# def prune_by_percentile(original_model, current_mask, percent, resample=False, reinit=False, **kwargs):
+#     index = 0
+#     for name, param in original_model.named_parameters():
+#         if 'weight' in name:
+#             tensor = param.data.cpu().numpy()
+#             alive = tensor[np.nonzero(tensor)]
+#             percentile_value = np.percentile(abs(alive), percent)
+#
+#             weight_dev = param.device
+#             new_mask = np.where(abs(tensor) < percentile_value, 0, current_mask[index])
+#
+#             param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
+#             current_mask[index] = new_mask
+#             index = index + 1
+#
+#     return current_mask
 
-    progress_bar = tqdm(range(training_epochs))
-
-    for train_epoch in progress_bar:
-        accuracy = run_evaluation(test_loader, loaded_model, device)
-
-        train_loss, train_accuracy = train(train_loader, loaded_model, optimizer, loss, device)
-
-        progress_bar.set_description(
-            f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
-
-
-def original_initialization(model, mask, weights):
-    index = 0
-    for name, param in model.named_parameters():
-        if 'weight' in name:
-            weight_dev = param.device
-            param.data = torch.from_numpy(mask[index] * weights[name].cpu().numpy()).to(weight_dev)
-            index = index + 1
-        if 'bias' in name:
-            param.data = weights[name]
-
-
-def prune_by_percentile(original_model, current_mask, percent, resample=False, reinit=False, **kwargs):
-    index = 0
-    for name, param in original_model.named_parameters():
-        if 'weight' in name:
-            tensor = param.data.cpu().numpy()
-            alive = tensor[np.nonzero(tensor)]
-            percentile_value = np.percentile(abs(alive), percent)
-
-            weight_dev = param.device
-            new_mask = np.where(abs(tensor) < percentile_value, 0, current_mask[index])
-
-            param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
-            current_mask[index] = new_mask
-            index = index + 1
-
-    return current_mask
+def print_model(original_model):
+    weights = original_model.state_dict()
+    layers = list(original_model.state_dict())
+    for l in layers[:9:3]:
+        if 'weight' in l or 'bias' in l:
+            data = weights[l]
+            print(data)
