@@ -13,7 +13,7 @@ def store_param():
 
     shutil.copy(os.path.basename(__file__), os.path.join(path_base, "wticket.py"))
 
-    for exp_id in range(10):
+    for exp_id in range(2):
         date_now = datetime.now().strftime("%Y-%m-%d-%H%M%S")
         cur_exp = date_now + "-" + str(uuid.uuid4())
         path_cur_base = os.path.join(path_base, cur_exp)
