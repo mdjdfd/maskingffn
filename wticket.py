@@ -66,7 +66,7 @@ def run_model(storage_path):
 
     # Start of Pruning Functionality
     # best_accuracy = 0
-    prune_percentile = 40
+    prune_percentile = 50
     ITERATION = 10
     training_epochs = 50
 
