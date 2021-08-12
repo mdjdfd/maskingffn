@@ -13,6 +13,7 @@ import json
 from deepstruct.learning import train
 from deepstruct.learning import run_evaluation
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 
 ################### Algorithm Steps ####################
@@ -23,7 +24,7 @@ import matplotlib.pyplot as plt
 
 
 def run_model(storage_path):
-    batch_size = 10
+    batch_size = 60
 
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -45,6 +46,7 @@ def run_model(storage_path):
     # Normal distribution of weights
     original_model.apply(weight_init)
 
+
     # Storing initial network
     initial_state_dict = copy.deepcopy(original_model.state_dict())
     model = original_model.state_dict()
@@ -58,7 +60,7 @@ def run_model(storage_path):
 
     # Stochastic Gradient Descent optimization and cross entropy loss
     learning_rate = 0.01
-    optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
     loss = nn.CrossEntropyLoss()
 
     # Close all open figures and set to matplotlib
@@ -66,7 +68,7 @@ def run_model(storage_path):
 
     # Start of Pruning Functionality
     # best_accuracy = 0
-    prune_percentile = 90
+    prune_percentile = 50
     ITERATION = 10
     training_epochs = 50
 
@@ -74,9 +76,12 @@ def run_model(storage_path):
     store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
                          training_epochs, storage_path)
 
+
     # Initial training
     initial_training(original_model, train_loader, test_loader, optimizer, loss, device,
                      training_epochs, prune_type, storage_path)
+
+
 
     # Iterative pruning
     current_mask = initial_mask
@@ -101,9 +106,11 @@ def initial_training(original_model, train_loader, test_loader, optimizer, loss,
 
     for train_epoch in progress_bar:
         accuracy = run_evaluation(test_loader, original_model, device)
+        # accuracy = test(original_model, test_loader, loss)
         test_accuracy_arr[train_epoch] = accuracy
 
         train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+        # train_loss = train(original_model, train_loader, optimizer, loss)
         train_loss_arr[train_epoch] = train_loss
 
         torch.save(original_model.state_dict(),
@@ -124,6 +131,7 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 
     original_initialization(original_model, mask, initial_weights)
 
+    optimizer = torch.optim.Adam(original_model.parameters(), lr=1.2e-3, weight_decay=1e-4)
 
     pruned_mask = utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
@@ -133,9 +141,11 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 
     for train_epoch in progress_bar:
         accuracy = run_evaluation(test_loader, original_model, device)
+        # accuracy = test(original_model, test_loader, loss)
         test_accuracy_arr[train_epoch] = accuracy
 
         train_loss, train_accuracy = train(train_loader, original_model, optimizer, loss, device)
+        # train_loss = train(original_model, train_loader, optimizer, loss)
         train_loss_arr[train_epoch] = train_loss
 
         torch.save(original_model.state_dict(),
@@ -156,8 +166,8 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 def print_model(original_model):
     weights = original_model.state_dict()
     layers = list(original_model.state_dict())
-    for l in layers[:9:3]:
-        if 'weight' in l or 'bias' in l:
+    for l in layers[:]:
+        if 'weight' in l:
             data = weights[l]
             print(data)
 
@@ -194,7 +204,6 @@ def store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, pr
 
 
 def prune_by_percentile(original_model, mask, percent, resample=False, reinit=False, **kwargs):
-
     step = 0
     for name, param in original_model.named_parameters():
         if 'weight' in name:
