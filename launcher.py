@@ -14,8 +14,8 @@ def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-    # prm.store_param()
-    ret.retrain_wticket()
+    prm.store_param()
+    # ret.retrain_wticket()
 
 
     # wticket_mask_path = "storage/2021-07-11-111745-fe392342-d71c-4ee8-a1fe-712f13e9a884/0/lt_mask_90.0.pkl"
