@@ -16,7 +16,7 @@ from deepstruct.learning import run_evaluation
 def retrain_wticket():
     base_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/experiment_data/storage/2021-08-12-193331-823d8a89-bee8-41b5-9d2b-a15bf7daa077/"
     wticket_model_path = base_path + "initial_model.pt"
-    wticket_mask_path = base_path + "9/lt_mask_2.0.pkl"
+    wticket_mask_path = base_path + "1/lt_mask_28.5.pkl"
 
     batch_size = 60
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
@@ -36,7 +36,7 @@ def retrain_wticket():
 
     weights = loaded_model.state_dict()
 
-    training_epochs = 30
+    training_epochs = 50
 
     learning_rate = 0.01
     optimizer = torch.optim.SGD(loaded_model.parameters(), lr=learning_rate)
@@ -52,7 +52,7 @@ def retrain_wticket():
     if not os.path.exists(path_retraining):
         os.makedirs(path_retraining)
 
-    path_retraining = os.path.join(path_retraining, "9")  # Change folder no
+    path_retraining = os.path.join(path_retraining, "1")  # Change folder no
     if not os.path.exists(path_retraining):
         os.makedirs(path_retraining)
 
@@ -99,7 +99,7 @@ def retrain_wticket():
 def store_retraining_data(train_loss_arr, test_accuracy_arr, path_retraining):
     param = {'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
 
-    with open(f"{path_retraining}/retraining_data_12.json", 'w') as fp:  # Change json file no
+    with open(f"{path_retraining}/retraining_data_17_50epochs.json", 'w') as fp:  # Change json file no
         json.dump(param, fp, sort_keys=True, indent=4)
 
 
