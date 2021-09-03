@@ -13,7 +13,6 @@ import pruning as pr
 def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-
     prm.store_param()
     # ret.retrain_wticket()
 
