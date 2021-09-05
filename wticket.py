@@ -36,7 +36,8 @@ def run_model(storage_path):
     output_size = int(labels.shape[-1])
 
     # Network initialization
-    hidden_layer = [300, 100]
+    # hidden_layer = [300, 100]
+    hidden_layer = [300, 200, 100, 50]
     original_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, hidden_layer)
     assert isinstance(original_model, deepstruct.sparse.MaskedDeepFFN)
 
