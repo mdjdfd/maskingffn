@@ -24,7 +24,7 @@ import torch.nn.functional as F
 
 
 def run_model(storage_path):
-    batch_size = 10
+    batch_size = 100
 
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -70,7 +70,7 @@ def run_model(storage_path):
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
-    ITERATION = 10
+    ITERATION = 20
     training_epochs = 50
 
     # Store hyperparameter
