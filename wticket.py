@@ -71,7 +71,7 @@ def run_model(storage_path):
     # Start of Pruning Functionality
     # best_accuracy = 0
     prune_percentile = 10
-    ITERATION = 20
+    ITERATION = 10
     training_epochs = 50
 
     # Store hyperparameter
@@ -100,7 +100,7 @@ def initial_training(original_model, train_loader, test_loader, optimizer, loss,
     train_loss_arr = np.zeros(training_epochs, float)
     test_accuracy_arr = np.zeros(training_epochs, float)
 
-    utils.print_nonzeros(original_model)
+    pruned_mask = utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
 
     path_experiment = os.path.join(storage_path, "initial_training")
@@ -121,7 +121,7 @@ def initial_training(original_model, train_loader, test_loader, optimizer, loss,
         progress_bar.set_description(
             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
 
-    store_training_data(train_loss_arr, test_accuracy_arr, path_experiment)
+    store_training_data(pruned_mask, train_loss_arr, test_accuracy_arr, path_experiment)
 
 
 def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, loss, device,
