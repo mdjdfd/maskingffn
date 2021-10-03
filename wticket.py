@@ -156,7 +156,7 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
         progress_bar.set_description(
             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
 
-    store_training_data(train_loss_arr, test_accuracy_arr, path_experiment)
+    store_training_data(pruned_mask, train_loss_arr, test_accuracy_arr, path_experiment)
 
     drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mask, path_experiment)
 
@@ -220,11 +220,12 @@ def drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mas
     plt.close()
 
 
-def store_training_data(train_loss_arr, test_accuracy_arr, path_experiment):
-    param = {'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
+def store_training_data(pruned_mask, train_loss_arr, test_accuracy_arr, path_experiment):
+    param = {'pruned_mask': pruned_mask, 'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
 
     with open(f"{os.getcwd()}/{path_experiment}/training_data.json", 'w') as fp:
         json.dump(param, fp, sort_keys=True, indent=4)
+
 
 
 def store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
