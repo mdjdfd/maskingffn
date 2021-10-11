@@ -61,7 +61,7 @@ def run_model(storage_path):
     initial_mask = create_mask(original_model)
 
     # Stochastic Gradient Descent optimization and cross entropy loss
-    learning_rate = 0.01
+    learning_rate = 1.2e-3
     optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
     loss = nn.CrossEntropyLoss()
 
