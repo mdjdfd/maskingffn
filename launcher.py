@@ -9,21 +9,18 @@ import parameter as prm
 import pickle
 import pruning as pr
 
+import graph_visualization as gv
+
 
 def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-    # prm.store_param()
+    prm.store_param()
 
-    for i in range(10):
-        ret.retrain_wticket(2, i)
+    # for i in range(10):
+    #     ret.retrain_wticket(2, i+1)
 
-
-    # wticket_mask_path = "storage/2021-07-11-111745-fe392342-d71c-4ee8-a1fe-712f13e9a884/0/lt_mask_90.0.pkl"
-    # mask = []
-    # with open(wticket_mask_path, 'rb') as f:
-    #     mask.append(pickle.load(f))
-    # wticket_retraining.Retrain(mask)
+    # gv.show_network_graph()
 
     # test_accuracy, model = tr.config_and_train()
     # pr.network_prune()

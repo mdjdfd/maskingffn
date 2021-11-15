@@ -14,8 +14,7 @@ from deepstruct.learning import run_evaluation
 
 
 def retrain_wticket(prune_iteration, training_iteration):
-    # base_path = "/Users/junaidfahad/Downloads/Masters/Master Thesis Proposal/experiment_data/storage/2021-10-03-141255-d6177e91-2c06-430b-9ea2-1c05a78839ed/"
-    base_path = "/home/junaid/maskingffn/storage/2021-10-03-141255-d6177e91-2c06-430b-9ea2-1c05a78839ed/"
+    base_path = "/Volumes/Extreme SSD/thesis_storage/storage/2021-10-03-141255-d6177e91-2c06-430b-9ea2-1c05a78839ed/"
     wticket_model_path = base_path + "initial_model.pt"
     wticket_mask_path = base_path + str(prune_iteration) + "/lt_mask_73.0.pkl"
 
@@ -29,10 +28,17 @@ def retrain_wticket(prune_iteration, training_iteration):
     output_size = int(labels.shape[-1])
 
     # Load stored model
+    # hidden_layer = [300, 200, 100, 50]
+    # loaded_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, hidden_layer)
+    # loaded_model.load_state_dict(torch.load(wticket_model_path, map_location='cpu'))
+    # loaded_model.eval()
+
+    # Random re-initialization
     hidden_layer = [300, 200, 100, 50]
     loaded_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, hidden_layer)
-    loaded_model.load_state_dict(torch.load(wticket_model_path, map_location='cpu'))
-    loaded_model.eval()
+    loaded_model.to(device)
+
+    # mask = create_random_mask(loaded_model)
 
     with open(wticket_mask_path, 'rb') as f:
         mask = pickle.load(f)
@@ -42,7 +48,6 @@ def retrain_wticket(prune_iteration, training_iteration):
     training_epochs = 50
 
     learning_rate = 1.2e-3
-    # optimizer = torch.optim.SGD(loaded_model.parameters(), lr=learning_rate)
     optimizer = torch.optim.Adam(loaded_model.parameters(), lr=learning_rate, weight_decay=1e-4)
     loss = nn.CrossEntropyLoss()
 
@@ -52,7 +57,10 @@ def retrain_wticket(prune_iteration, training_iteration):
     test_accuracy_arr = np.zeros(training_epochs, float)
     progress_bar = tqdm(range(training_epochs))
 
-    path_retraining = os.path.join(base_path, "retraining")
+    # path_retraining = os.path.join(base_path, "retraining")
+    path_retraining = os.path.join(base_path, "retraining/random_model")
+    # path_retraining = os.path.join(base_path, "retraining/random_mask")
+
     if not os.path.exists(path_retraining):
         os.makedirs(path_retraining)
 
@@ -71,33 +79,6 @@ def retrain_wticket(prune_iteration, training_iteration):
             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
 
     store_retraining_data(train_loss_arr, test_accuracy_arr, path_retraining, training_iteration)
-
-    # current_mask = mask
-    # for training_iteration in range(0, ITERATION):
-    #     current_mask = prune_by_percentile(loaded_model, current_mask, prune_percentile)
-    #     retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
-    #                     weights,
-    #                     mask,
-    #                     training_epochs)
-
-
-# def retraining_loop(train_loader, test_loader, loaded_model, optimizer, loss, device,
-#                     weights,
-#                     current_mask,
-#                     training_epochs):
-#     original_initialization(loaded_model, current_mask, weights)
-#
-#     progress_bar = tqdm(range(training_epochs))
-#
-#     for train_epoch in progress_bar:
-#         accuracy = run_evaluation(test_loader, loaded_model, device)
-#
-#         train_loss, train_accuracy = train(train_loader, loaded_model, optimizer, loss, device)
-#
-#         progress_bar.set_description(
-#             f'Train Epoch: {train_epoch + 1}/{training_epochs} Loss: {train_loss:.6f} Accuracy: {accuracy:.2f}%')
-#
-#
 
 
 # Function for Training
@@ -123,7 +104,6 @@ def train(model, train_loader, optimizer, criterion, device):
     return train_loss.item()
 
 
-
 def store_retraining_data(train_loss_arr, test_accuracy_arr, path_retraining, training_iteration):
     param = {'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
 
@@ -142,26 +122,6 @@ def original_initialization(model, mask, weights):
             param.data = weights[name]
 
 
-#
-#
-# def prune_by_percentile(original_model, current_mask, percent, resample=False, reinit=False, **kwargs):
-#     index = 0
-#     for name, param in original_model.named_parameters():
-#         if 'weight' in name:
-#             tensor = param.data.cpu().numpy()
-#             alive = tensor[np.nonzero(tensor)]
-#             percentile_value = np.percentile(abs(alive), percent)
-#
-#             weight_dev = param.device
-#             new_mask = np.where(abs(tensor) < percentile_value, 0, current_mask[index])
-#
-#             param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
-#             current_mask[index] = new_mask
-#             index = index + 1
-#
-#     return current_mask
-
-
 def print_model(loaded_model):
     weights = loaded_model.state_dict()
     layers = list(loaded_model.state_dict())
@@ -169,3 +129,21 @@ def print_model(loaded_model):
         if 'weight' in l or 'bias' in l:
             data = weights[l]
             print(data)
+
+
+def create_random_mask(model):
+    index = 0
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            index = index + 1
+
+    random_mask = [None] * index
+
+    index = 0
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            tensor = param.data.cpu().numpy()
+            random_mask[index] = np.random.choice([0, 1], tensor.shape).astype('f')
+            index = index + 1
+
+    return random_mask

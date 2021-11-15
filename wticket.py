@@ -61,8 +61,10 @@ def run_model(storage_path):
     initial_mask = create_mask(original_model)
 
     # Stochastic Gradient Descent optimization and cross entropy loss
-    learning_rate = 1.2e-3
-    optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
+    # learning_rate = 1.2e-3
+    # optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
+    learning_rate = 0.01
+    optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
     # Close all open figures and set to matplotlib
@@ -133,7 +135,7 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 
     original_initialization(original_model, mask, initial_weights)
 
-    optimizer = torch.optim.Adam(original_model.parameters(), lr=1.2e-3, weight_decay=1e-4)
+    # optimizer = torch.optim.Adam(original_model.parameters(), lr=1.2e-3, weight_decay=1e-4)
 
     pruned_mask = utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
@@ -171,7 +173,7 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 # Function for Training
 def train(model, train_loader, optimizer, criterion):
     EPS = 1e-6
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.train()
     for batch_idx, (imgs, targets) in enumerate(train_loader):
         optimizer.zero_grad()
