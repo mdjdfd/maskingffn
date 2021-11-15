@@ -16,7 +16,6 @@ def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
     prm.store_param()
-
     # for i in range(10):
     #     ret.retrain_wticket(2, i+1)
 
