@@ -17,6 +17,7 @@ def network_prune():
 
     input_shape = feature.shape[1:]
     output_size = int(labels.shape[-1])
+
     model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, [300, 100])
 
     model.load_state_dict(torch.load('cache/initial_model.pt'))

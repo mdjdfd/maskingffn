@@ -39,7 +39,7 @@ def run_model(storage_path):
     # hidden_layer = [300, 100]
 
     hidden_layer = [300, 200, 100, 50]
-    original_model = deepstruct.sparse.MaskedDeepFFN(input_shape, output_size, hidden_layer)
+    original_model = deepstruct.sparse.MaskedDeepFFN(input_shape, 10, hidden_layer)
     assert isinstance(original_model, deepstruct.sparse.MaskedDeepFFN)
 
     # Load model into device
@@ -47,7 +47,6 @@ def run_model(storage_path):
 
     # Normal distribution of weights
     original_model.apply(weight_init)
-
 
     # Storing initial network
     initial_state_dict = copy.deepcopy(original_model.state_dict())
@@ -61,10 +60,10 @@ def run_model(storage_path):
     initial_mask = create_mask(original_model)
 
     # Stochastic Gradient Descent optimization and cross entropy loss
-    # learning_rate = 1.2e-3
-    # optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
-    learning_rate = 0.01
-    optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
+    learning_rate = 1.2e-3
+    optimizer = torch.optim.Adam(original_model.parameters(), weight_decay=1e-4)
+    # learning_rate = 0.01
+    # optimizer = torch.optim.SGD(original_model.parameters(), lr=learning_rate)
     loss = nn.CrossEntropyLoss()
 
     # Close all open figures and set to matplotlib
@@ -80,12 +79,9 @@ def run_model(storage_path):
     store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
                          training_epochs, storage_path)
 
-
     # Initial training
     initial_training(original_model, train_loader, test_loader, optimizer, loss, device,
                      training_epochs, prune_type, storage_path)
-
-
 
     # Iterative pruning
     current_mask = initial_mask
@@ -135,7 +131,7 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
 
     original_initialization(original_model, mask, initial_weights)
 
-    # optimizer = torch.optim.Adam(original_model.parameters(), lr=1.2e-3, weight_decay=1e-4)
+    optimizer = torch.optim.Adam(original_model.parameters(), lr=1.2e-3, weight_decay=1e-4)
 
     pruned_mask = utils.print_nonzeros(original_model)
     progress_bar = tqdm(range(training_epochs))
@@ -166,10 +162,6 @@ def winning_ticket_loop(original_model, train_loader, test_loader, optimizer, lo
         pickle.dump(mask, fp)
 
 
-
-
-
-
 # Function for Training
 def train(model, train_loader, optimizer, criterion):
     EPS = 1e-6
@@ -192,10 +184,6 @@ def train(model, train_loader, optimizer, criterion):
                 p.grad.data = torch.from_numpy(grad_tensor).to(device)
         optimizer.step()
     return train_loss.item()
-
-
-
-
 
 
 ##############Debug Purpose Only#############
@@ -223,11 +211,11 @@ def drawing_plots(training_epochs, train_loss_arr, test_accuracy_arr, pruned_mas
 
 
 def store_training_data(pruned_mask, train_loss_arr, test_accuracy_arr, path_experiment):
-    param = {'pruned_mask': pruned_mask, 'train_loss_arr': train_loss_arr.tolist(), 'test_accuracy_arr': test_accuracy_arr.tolist()}
+    param = {'pruned_mask': pruned_mask, 'train_loss_arr': train_loss_arr.tolist(),
+             'test_accuracy_arr': test_accuracy_arr.tolist()}
 
     with open(f"{os.getcwd()}/{path_experiment}/training_data.json", 'w') as fp:
         json.dump(param, fp, sort_keys=True, indent=4)
-
 
 
 def store_hyperparameter(batch_size, hidden_layer, learning_rate, prune_type, prune_percentile, ITERATION,
