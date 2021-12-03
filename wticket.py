@@ -24,7 +24,7 @@ import torch.nn.functional as F
 
 
 def run_model(storage_path):
-    batch_size = 10
+    batch_size = 100
 
     train_loader, test_loader = hp.get_mnist_loaders(batch_size)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -36,9 +36,9 @@ def run_model(storage_path):
     output_size = int(labels.shape[-1])
 
     # Network initialization
-    # hidden_layer = [300, 100]
+    hidden_layer = [300, 100]
 
-    hidden_layer = [300, 200, 100, 50]
+    # hidden_layer = [300, 200, 100, 50]
     original_model = deepstruct.sparse.MaskedDeepFFN(input_shape, 10, hidden_layer)
     assert isinstance(original_model, deepstruct.sparse.MaskedDeepFFN)
 
